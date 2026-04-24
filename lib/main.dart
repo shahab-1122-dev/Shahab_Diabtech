@@ -1,30 +1,130 @@
+import 'package:diabtech/models/glucose_model.dart';
+import 'package:diabtech/models/settings_model.dart';
 import 'package:diabtech/screens/auth/login_screen.dart';
 import 'package:diabtech/screens/auth/signup_screen.dart';
 import 'package:diabtech/screens/home/homeScreen.dart';
 import 'package:diabtech/screens/onboarding/onboarding_Screen.dart';
+import 'package:diabtech/screens/setting_screen/SettingsScreen.dart';
 import 'package:diabtech/screens/splashScreen/splash_Screen.dart';
+import 'package:diabtech/screens/utils/constant.dart';
+import 'package:diabtech/services/settings_service.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
-  runApp(MyApp());
+// Global theme notifier — controls dark/light mode app-wide
+final ValueNotifier<ThemeMode> themeNotifier =
+    ValueNotifier(ThemeMode.light);
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+
+  // Register adapters
+  Hive.registerAdapter(GlucoseModelAdapter());
+  Hive.registerAdapter(SettingsModelAdapter());
+
+  // Open boxes
+  await Hive.openBox<GlucoseModel>('glucoseBox');
+  await Hive.openBox('userBox');
+  await Hive.openBox<SettingsModel>('settingsBox');
+
+  // Load saved theme on startup
+  final settings = SettingsService.getSettings();
+  themeNotifier.value =
+      settings.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Diabetech',
-      debugShowCheckedModeBanner: false,
-      initialRoute: 'spalsh',
-      routes: {
-        'spalsh': (context) => const SplashScreen(),
-        'onboarding': (context) => const OnboardingScreen(),
-        'login': (context) => const LoginScreen(),
-        'signupscreen': (context) => const SignupScreen(),
-        'homescreen': (context) => const HomeScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'DiabTech',
+          debugShowCheckedModeBanner: false,
+          themeMode: mode,
+
+          // ── Light theme ──────────────────────────
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primaryColor: AppColors.primary,
+            scaffoldBackgroundColor: AppColors.background,
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              secondary: AppColors.primary,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              iconTheme:
+                  IconThemeData(color: AppColors.textDark),
+              titleTextStyle: TextStyle(
+                color: AppColors.textDark,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            bottomNavigationBarTheme:
+                const BottomNavigationBarThemeData(
+              backgroundColor: Colors.white,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textGrey,
+              elevation: 0,
+            ),
+            cardColor: Colors.white,
+            dividerColor: AppColors.border,
+          ),
+
+          // ── Dark theme ───────────────────────────
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primaryColor: AppColors.primary,
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.primary,
+              secondary: AppColors.primary,
+              surface: Color(0xFF1E1E1E),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF121212),
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              iconTheme: IconThemeData(color: Colors.white),
+              titleTextStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            bottomNavigationBarTheme:
+                const BottomNavigationBarThemeData(
+              backgroundColor: Color(0xFF1E1E1E),
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: Colors.grey,
+              elevation: 0,
+            ),
+            cardColor: const Color(0xFF1E1E1E),
+            dividerColor: Colors.grey.shade800,
+          ),
+
+          initialRoute: 'splash',
+          routes: {
+            'splash': (context) => const SplashScreen(),
+            'onboarding': (context) =>
+                const OnboardingScreen(),
+            'login': (context) => const LoginScreen(),
+            'signupscreen': (context) =>
+                const SignupScreen(),
+            'homescreen': (context) => const HomeScreen(),
+            'setting': (context) => const SettingsScreen(),
+          },
+        );
       },
     );
   }

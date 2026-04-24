@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'package:diabtech/screens/home/homeScreen.dart';
+import 'package:diabtech/screens/onboarding/onboarding_Screen.dart';
 import 'package:diabtech/screens/utils/constant.dart';
 import 'package:flutter/material.dart';
-
-import 'package:diabtech/screens/onboarding/onboarding_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,22 +19,25 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void initState() {
+    Hive.box('userBox').put('seenOnboarding', false);
     super.initState();
-
-    // Animation setup
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 2),
     );
     _fadeIn = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-
     _controller.forward();
 
-    // Navigate to Onboarding after 3 seconds
-    Timer(const Duration(seconds: 4                  ), () {
+    Timer(const Duration(seconds: 3), () {
+      final userBox = Hive.box('userBox');
+      final seenOnboarding = userBox.get('seenOnboarding', defaultValue: false);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        MaterialPageRoute(
+          builder: (_) =>
+              seenOnboarding ? const HomeScreen() : const OnboardingScreen(),
+        ),
       );
     });
   }
@@ -55,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             Center(
               child: Image.asset(
-                "assets/images/logo.png",
+                'assets/images/logo.png',
                 height: 150,
                 width: 150,
               ),
@@ -67,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              "Your Smart Diabetes Companion",
+              'Your Smart Diabetes Companion',
               style: AppTextStyles.body.copyWith(color: Colors.white70),
             ),
           ],

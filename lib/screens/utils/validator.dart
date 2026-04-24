@@ -20,6 +20,7 @@ class Validators {
     if (value == null || value.isEmpty) return "Enter Date";
     return null;
   }
+
   static String? validateTime(String? value) {
     if (value == null || value.isEmpty) return "Enter Time";
     return null;
@@ -29,7 +30,7 @@ class Validators {
     if (value == null || value.isEmpty) return "Enter glucose level";
     final num? glucose = num.tryParse(value);
     if (glucose == null) return "Must be a number";
-    if (glucose < 50 || glucose > 400) return "Out of range (50–400)";
+    if (glucose < 1 || glucose > 500) return "Out of range (50–400)";
     return null;
   }
 }
